@@ -21,6 +21,8 @@ Route::get('/qr-gallery', function () {
     return view('qr-gallery');
 })->name('qr.gallery');
 
+Route::get('/visite-virtuelle', [ArtworkController::class, 'virtualTour'])->name('virtual.tour');
+
 // Routes d'authentification
 Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);

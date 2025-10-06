@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Artwork;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -37,5 +38,30 @@ class ArtworkController extends Controller
                 'Cache-Control' => 'public, max-age=3600',
             ]
         );
+    }
+
+    public function virtualTour()
+    {
+        $artworks = Artwork::with('category')
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($artwork) {
+                return [
+                    'id' => $artwork->id,
+                    'title' => $artwork->title,
+                    'artist' => $artwork->artist,
+                    'description' => $artwork->description,
+                    'image_path' => $artwork->image_path ? asset('storage/' . $artwork->image_path) : null,
+                    'audio_path' => $artwork->audio_path ? asset('storage/' . $artwork->audio_path) : null,
+                    'category' => [
+                        'name' => $artwork->category->name,
+                        'color' => $artwork->category->color,
+                    ],
+                    'qr_code' => $artwork->qr_code,
+                    'is_featured' => $artwork->is_featured,
+                ];
+            });
+
+        return view('virtual-tour', compact('artworks'));
     }
 }

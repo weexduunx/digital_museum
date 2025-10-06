@@ -38,9 +38,9 @@
                         {{ __('app.gallery') }}
                     </a>
 
-                    <a href="{{ route('qr.gallery') }}"
+                    <a href="{{ route('virtual.tour') }}"
                         class="px-3 py-2 font-light text-gray-700 hover:text-gray-900 text-sm tracking-wide transition-colors duration-200">
-                        QR CODES
+                        VISITE 3D
                     </a>
 
                     @auth
