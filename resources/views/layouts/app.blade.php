@@ -13,7 +13,7 @@
     @livewireStyles
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -26,7 +26,7 @@
                             </div>
                         </div>
                         <div class="ml-3">
-                            <div class="text-lg font-semibold text-gray-900">{{ __('app.title') }}</div>
+                            <div class="text-lg font-semibold text-gray-900">{{ __('Musée des Civilisations Noires') }}</div>
                         </div>
                     </a>
                 </div>
