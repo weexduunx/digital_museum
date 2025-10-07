@@ -67,9 +67,12 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10 mb-12">
+    <!-- Masonry Grid Layout -->
+    <div class="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 mb-12">
         @forelse($artworks as $artwork)
-            <livewire:artwork-card :artwork="$artwork" :key="$artwork->id" />
+            <div class="break-inside-avoid">
+                <livewire:artwork-card :artwork="$artwork" :key="$artwork->id" />
+            </div>
         @empty
             <div class="col-span-full text-center py-12">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
