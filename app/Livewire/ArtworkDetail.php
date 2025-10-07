@@ -24,6 +24,9 @@ class ArtworkDetail extends Component
     {
         $this->currentLanguage = $language;
         $this->isPlaying = false; // Reset audio state when switching language
+
+        // Force re-render
+        $this->dispatch('language-changed', language: $language);
     }
 
     public function toggleAudio()

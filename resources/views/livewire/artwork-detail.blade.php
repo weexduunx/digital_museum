@@ -96,7 +96,7 @@
                     </div>
                 </div>
 
-                <div class="prose prose-gray max-w-none">
+                <div class="prose prose-gray max-w-none" wire:key="description-{{ $currentLanguage }}">
                     <p class="text-gray-700 leading-relaxed font-light">{{ $this->description }}</p>
                 </div>
 
@@ -116,7 +116,7 @@
                     </div>
 
                     <!-- Main Browser TTS Section -->
-                    <div x-data="speechController()" class="space-y-3">
+                    <div class="space-y-3">
 
                         <!-- Browser TTS - Main Option -->
                         <div class="bg-white rounded-lg p-4 border border-indigo-200">
@@ -134,28 +134,12 @@
                                 </div>
 
                                 <button
-                                    x-show="canSpeak"
-                                    @click="toggleSpeech()"
+                                    id="speech-btn"
+                                    onclick="artworkSpeech.toggle(@js($this->description), @js($currentLanguage))"
                                     class="inline-flex items-center px-4 py-2 bg-gray-900 text-white hover:bg-gray-800 transition-colors duration-200 shadow-sm font-light tracking-wide"
-                                    x-text="speaking ? '⏹️ Arrêter' : '🔊 Écouter'"
                                 >
+                                    🔊 Écouter
                                 </button>
-
-                                <div x-show="!canSpeak" class="text-sm text-red-600">
-                                    Synthèse vocale non supportée
-                                </div>
-                            </div>
-
-                            <!-- Audio Progress Indicator -->
-                            <div x-show="speaking" class="mt-3">
-                                <div class="flex items-center text-sm text-gray-600 font-light">
-                                    <svg class="animate-pulse w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.816L4.846 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.846l3.537-3.816z" clip-rule="evenodd"/>
-                                        <path d="M11.786 7.457a.5.5 0 01.707 0 4.5 4.5 0 010 6.364.5.5 0 01-.707-.707 3.5 3.5 0 000-4.95.5.5 0 010-.707z"/>
-                                        <path d="M13.39 5.853a.5.5 0 01.707 0 7.5 7.5 0 010 10.607.5.5 0 01-.707-.707 6.5 6.5 0 000-9.193.5.5 0 010-.707z"/>
-                                    </svg>
-                                    Lecture en cours...
-                                </div>
                             </div>
                         </div>
 
@@ -251,60 +235,75 @@
     </div>
 </div>
 
-@push('scripts')
+@script
 <script>
-function speechController() {
-    return {
-        speaking: false,
-        canSpeak: 'speechSynthesis' in window,
-        currentUtterance: null,
-        text: @js($this->description),
-        lang: @js($currentLanguage === 'wo' ? 'fr' : $currentLanguage),
+// Simple speech synthesis that updates on language change
+window.artworkSpeech = {
+    speaking: false,
+    utterance: null,
 
-        toggleSpeech() {
-            if (!this.speaking) {
-                this.startSpeech();
-            } else {
-                this.stopSpeech();
-            }
-        },
+    speak(text, lang) {
+        this.stop();
 
-        startSpeech() {
-            this.speaking = true;
-            this.currentUtterance = new SpeechSynthesisUtterance(this.text);
-            this.currentUtterance.lang = this.lang;
-            this.currentUtterance.rate = 0.9;
-            this.currentUtterance.pitch = 1;
-
-            // Try to find a good voice
-            const voices = speechSynthesis.getVoices();
-            const preferredVoice = voices.find(voice =>
-                voice.lang.startsWith(this.lang) &&
-                (voice.name.includes('Female') || voice.name.includes('Neural') || voice.name.includes('Natural'))
-            );
-            if (preferredVoice) {
-                this.currentUtterance.voice = preferredVoice;
-            }
-
-            this.currentUtterance.onend = () => {
-                this.speaking = false;
-                this.currentUtterance = null;
-            };
-
-            this.currentUtterance.onerror = () => {
-                this.speaking = false;
-                this.currentUtterance = null;
-            };
-
-            speechSynthesis.speak(this.currentUtterance);
-        },
-
-        stopSpeech() {
-            speechSynthesis.cancel();
-            this.speaking = false;
-            this.currentUtterance = null;
+        if (!('speechSynthesis' in window)) {
+            alert('Votre navigateur ne supporte pas la synthèse vocale');
+            return;
         }
-    };
-}
+
+        this.speaking = true;
+        this.utterance = new SpeechSynthesisUtterance(text);
+        this.utterance.lang = lang === 'wo' ? 'fr' : lang;
+        this.utterance.rate = 0.9;
+        this.utterance.pitch = 1;
+
+        // Find a good voice
+        const voices = speechSynthesis.getVoices();
+        const voice = voices.find(v =>
+            v.lang.startsWith(this.utterance.lang) &&
+            (v.name.includes('Female') || v.name.includes('Natural'))
+        );
+        if (voice) this.utterance.voice = voice;
+
+        this.utterance.onend = () => {
+            this.speaking = false;
+            this.utterance = null;
+            this.updateUI();
+        };
+
+        speechSynthesis.speak(this.utterance);
+        this.updateUI();
+    },
+
+    stop() {
+        speechSynthesis.cancel();
+        this.speaking = false;
+        this.utterance = null;
+        this.updateUI();
+    },
+
+    toggle(text, lang) {
+        if (this.speaking) {
+            this.stop();
+        } else {
+            this.speak(text, lang);
+        }
+    },
+
+    updateUI() {
+        const btn = document.getElementById('speech-btn');
+        if (btn) {
+            btn.textContent = this.speaking ? '⏹️ Arrêter' : '🔊 Écouter';
+        }
+    }
+};
+
+// Stop speech when language changes
+document.addEventListener('livewire:init', () => {
+    Livewire.on('language-changed', () => {
+        if (window.artworkSpeech) {
+            window.artworkSpeech.stop();
+        }
+    });
+});
 </script>
-@endpush
+@endscript
