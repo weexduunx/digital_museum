@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('description_en')->nullable();
             $table->text('description_wo')->nullable();
             $table->string('artist');
-            $table->year('creation_year')->nullable();
+            $table->unsignedSmallInteger('creation_year')->nullable();
             $table->string('medium')->nullable();
             $table->string('dimensions')->nullable();
             $table->string('image_path')->nullable();

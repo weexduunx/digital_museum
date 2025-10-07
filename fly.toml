@@ -1,11 +1,11 @@
-# fly.toml app configuration file generated for digital-museum on 2025-10-07T11:59:16Z
+# fly.toml app configuration file generated for digital-museum on 2025-10-07T12:46:38Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = 'digital-museum'
 primary_region = 'cdg'
-console_command = 'php /var/www/html/artisan tinker'
+console_command = 'php /var/www/artisan tinker'
 
 [experimental]
   auto_rollback = true
@@ -20,11 +20,20 @@ console_command = 'php /var/www/html/artisan tinker'
 
 [env]
   APP_ENV = 'production'
+  APP_URL = 'https://digital-museum.fly.dev'
+  DB_CONNECTION = 'pgsql'
+  DB_DATABASE = 'digital_museum'
+  DB_HOST = 'digital-museum-db.flycast'
+  DB_PORT = '5432'
   LOG_CHANNEL = 'stderr'
   LOG_LEVEL = 'info'
   LOG_STDERR_FORMATTER = 'Monolog\Formatter\JsonFormatter'
   SESSION_DRIVER = 'cookie'
   SESSION_SECURE_COOKIE = 'true'
+  SESSION_DOMAIN = 'digital-museum.fly.dev'
+  SESSION_SAME_SITE = 'lax'
+  SESSION_LIFETIME = '120'
+  ASSET_URL = 'https://digital-museum.fly.dev'
 
 [http_service]
   internal_port = 8080
@@ -73,5 +82,5 @@ console_command = 'php /var/www/html/artisan tinker'
   cpus = 1
 
 [[statics]]
-  guest_path = '/cnb/process/public'
+  guest_path = '/var/www/public'
   url_prefix = '/'
