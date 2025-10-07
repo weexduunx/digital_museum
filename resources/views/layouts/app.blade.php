@@ -417,6 +417,8 @@
         window.openQRDrawer = openQRDrawer;
         window.downloadQR = downloadQR;
     </script>
+
+    @stack('scripts')
 </body>
 
 </html>

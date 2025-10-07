@@ -116,11 +116,7 @@
                     </div>
 
                     <!-- Main Browser TTS Section -->
-                    <div x-data="{
-                        speaking: false,
-                        canSpeak: 'speechSynthesis' in window,
-                        currentUtterance: null
-                    }" class="space-y-3">
+                    <div x-data="speechController()" class="space-y-3">
 
                         <!-- Browser TTS - Main Option -->
                         <div class="bg-white rounded-lg p-4 border border-indigo-200">
@@ -139,34 +135,7 @@
 
                                 <button
                                     x-show="canSpeak"
-                                    @click="
-                                        if (!speaking) {
-                                            speaking = true;
-                                            const text = '{{ addslashes($this->description) }}';
-                                            const lang = '{{ $currentLanguage === 'wo' ? 'fr' : $currentLanguage }}';
-                                            currentUtterance = new SpeechSynthesisUtterance(text);
-                                            currentUtterance.lang = lang;
-                                            currentUtterance.rate = 0.9;
-                                            currentUtterance.pitch = 1;
-
-                                            // Try to find a good voice
-                                            const voices = speechSynthesis.getVoices();
-                                            const preferredVoice = voices.find(voice =>
-                                                voice.lang.startsWith(lang) &&
-                                                (voice.name.includes('Female') || voice.name.includes('Neural') || voice.name.includes('Natural'))
-                                            );
-                                            if (preferredVoice) currentUtterance.voice = preferredVoice;
-
-                                            currentUtterance.onend = () => { speaking = false; currentUtterance = null; };
-                                            currentUtterance.onerror = () => { speaking = false; currentUtterance = null; };
-
-                                            speechSynthesis.speak(currentUtterance);
-                                        } else {
-                                            speechSynthesis.cancel();
-                                            speaking = false;
-                                            currentUtterance = null;
-                                        }
-                                    "
+                                    @click="toggleSpeech()"
                                     class="inline-flex items-center px-4 py-2 bg-gray-900 text-white hover:bg-gray-800 transition-colors duration-200 shadow-sm font-light tracking-wide"
                                     x-text="speaking ? '⏹️ Arrêter' : '🔊 Écouter'"
                                 >
@@ -281,3 +250,61 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function speechController() {
+    return {
+        speaking: false,
+        canSpeak: 'speechSynthesis' in window,
+        currentUtterance: null,
+        text: @js($this->description),
+        lang: @js($currentLanguage === 'wo' ? 'fr' : $currentLanguage),
+
+        toggleSpeech() {
+            if (!this.speaking) {
+                this.startSpeech();
+            } else {
+                this.stopSpeech();
+            }
+        },
+
+        startSpeech() {
+            this.speaking = true;
+            this.currentUtterance = new SpeechSynthesisUtterance(this.text);
+            this.currentUtterance.lang = this.lang;
+            this.currentUtterance.rate = 0.9;
+            this.currentUtterance.pitch = 1;
+
+            // Try to find a good voice
+            const voices = speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice =>
+                voice.lang.startsWith(this.lang) &&
+                (voice.name.includes('Female') || voice.name.includes('Neural') || voice.name.includes('Natural'))
+            );
+            if (preferredVoice) {
+                this.currentUtterance.voice = preferredVoice;
+            }
+
+            this.currentUtterance.onend = () => {
+                this.speaking = false;
+                this.currentUtterance = null;
+            };
+
+            this.currentUtterance.onerror = () => {
+                this.speaking = false;
+                this.currentUtterance = null;
+            };
+
+            speechSynthesis.speak(this.currentUtterance);
+        },
+
+        stopSpeech() {
+            speechSynthesis.cancel();
+            this.speaking = false;
+            this.currentUtterance = null;
+        }
+    };
+}
+</script>
+@endpush
