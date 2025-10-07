@@ -3,6 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ArtworkController;
 
+// Health check for Fly.io
+Route::get('/health', function () {
+    return response('OK', 200);
+});
+
 Route::get('/', function () {
     return view('gallery');
 })->name('home');

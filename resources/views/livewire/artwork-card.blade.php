@@ -25,26 +25,60 @@
             </div>
         @endif
 
-        <!-- Overlay avec boutons d'action (visible au hover) -->
-        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <!-- Overlay avec boutons d'action (visible au hover et sur mobile) -->
+        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100">
             <div class="flex space-x-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                 <a
                     href="{{ route('artwork.show', $artwork->qr_code) }}"
-                    class="inline-flex items-center px-4 py-2 bg-white text-black text-sm font-medium hover:bg-gray-100 transition-colors duration-200"
+                    class="inline-flex items-center px-4 py-2 bg-white text-black text-sm font-medium hover:bg-gray-100 transition-colors duration-200 touch-manipulation"
                 >
                     APERÇU RAPIDE
                 </a>
-                <a
-                    href="{{ route('qr.generate', $artwork->qr_code) }}"
-                    target="_blank"
-                    class="inline-flex items-center p-2 bg-white/90 text-black hover:bg-white transition-colors duration-200"
+                <button
+                    onclick="openQRDrawer({
+                        title: '{{ addslashes($artwork->title) }}',
+                        artist: '{{ addslashes($artwork->artist) }}',
+                        year: '{{ $artwork->creation_year }}',
+                        category: '{{ $artwork->category->name }}',
+                        image: '{{ $artwork->image_path ? asset('storage/' . $artwork->image_path) : '' }}',
+                        qrCode: '{{ $artwork->qr_code }}',
+                        detailUrl: '{{ route('artwork.show', $artwork->qr_code) }}'
+                    })"
+                    class="inline-flex items-center p-2 bg-white/90 text-black hover:bg-white transition-colors duration-200 touch-manipulation"
                     title="QR Code"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
                     </svg>
-                </a>
+                </button>
             </div>
+        </div>
+
+        <!-- Boutons mobiles fixes en bas sur mobile -->
+        <div class="md:hidden absolute bottom-4 left-4 right-4 flex space-x-2">
+            <a
+                href="{{ route('artwork.show', $artwork->qr_code) }}"
+                class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-white/95 text-black text-xs font-medium hover:bg-white transition-colors duration-200 backdrop-blur-sm"
+            >
+                VOIR DÉTAILS
+            </a>
+            <button
+                onclick="openQRDrawer({
+                    title: '{{ addslashes($artwork->title) }}',
+                    artist: '{{ addslashes($artwork->artist) }}',
+                    year: '{{ $artwork->creation_year }}',
+                    category: '{{ $artwork->category->name }}',
+                    image: '{{ $artwork->image_path ? asset('storage/' . $artwork->image_path) : '' }}',
+                    qrCode: '{{ $artwork->qr_code }}',
+                    detailUrl: '{{ route('artwork.show', $artwork->qr_code) }}'
+                })"
+                class="inline-flex items-center justify-center p-2 bg-white/95 text-black hover:bg-white transition-colors duration-200 backdrop-blur-sm"
+                title="QR Code"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                </svg>
+            </button>
         </div>
     </div>
 
