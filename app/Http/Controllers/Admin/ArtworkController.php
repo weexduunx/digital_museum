@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Artwork;
 use App\Models\Category;
+use App\Services\ArtworkImageAnalyzerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -216,6 +217,40 @@ class ArtworkController extends Controller
 
         $status = $artwork->is_active ? 'activée' : 'désactivée';
         return back()->with('success', "Œuvre {$status}!");
+    }
+
+    /**
+     * Analyser une image pour générer automatiquement les descriptions
+     */
+    public function analyzeImage(Request $request, ArtworkImageAnalyzerService $analyzer)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        try {
+            $imagePath = $request->file('image')->getRealPath();
+            \Log::info('Analyse d\'image demandée:', ['path' => $imagePath]);
+
+            $analysis = $analyzer->analyzeArtwork($imagePath);
+
+            \Log::info('Résultat de l\'analyse:', ['analysis' => $analysis]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $analysis,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Erreur dans analyzeImage:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'analyse de l\'image: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     private function generateUniqueQrCode()

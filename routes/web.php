@@ -2,10 +2,34 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ArtworkController;
+use OpenAI\Laravel\Facades\OpenAI;
 
 // Health check for Fly.io
 Route::get('/health', function () {
     return response('OK', 200);
+});
+
+// Test OpenAI - À SUPPRIMER après débogage
+Route::get('/test-openai', function () {
+    try {
+        $response = OpenAI::chat()->create([
+            'model' => 'gpt-4o',
+            'messages' => [
+                ['role' => 'user', 'content' => 'Dis bonjour en JSON avec la clé "message"'],
+            ],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'response' => $response->choices[0]->message->content,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+    }
 });
 
 Route::get('/', function () {
@@ -41,6 +65,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('artworks', App\Http\Controllers\Admin\ArtworkController::class);
     Route::post('artworks/{artwork}/toggle-featured', [App\Http\Controllers\Admin\ArtworkController::class, 'toggleFeatured'])->name('artworks.toggle-featured');
     Route::post('artworks/{artwork}/toggle-active', [App\Http\Controllers\Admin\ArtworkController::class, 'toggleActive'])->name('artworks.toggle-active');
+    Route::post('artworks/analyze-image', [App\Http\Controllers\Admin\ArtworkController::class, 'analyzeImage'])->name('artworks.analyze-image');
 
     // Gestion des catégories
     Route::resource('categories', App\Http\Controllers\Admin\CategoryController::class);

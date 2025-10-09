@@ -21,9 +21,16 @@ class CreateAdminUser extends Command
         $email = $this->option('email');
         $password = $this->option('password');
 
-        // Si pas de mot de passe fourni, en demander un
+        // Si pas de mot de passe fourni, générer un mot de passe sécurisé
         if (!$password) {
-            $password = $this->secret('Entrez le mot de passe pour l\'administrateur');
+            // En environnement interactif, demander le mot de passe
+            if ($this->input->isInteractive()) {
+                $password = $this->secret('Entrez le mot de passe pour l\'administrateur');
+            } else {
+                // En environnement non-interactif (Laravel Cloud), générer un mot de passe
+                $password = 'Admin@' . date('Y') . rand(1000, 9999);
+                $this->warn("Mot de passe généré automatiquement: {$password}");
+            }
         }
 
         // Vérifier si l'utilisateur existe déjà

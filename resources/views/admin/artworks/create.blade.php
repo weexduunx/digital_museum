@@ -154,7 +154,16 @@
         <div class="space-y-6">
             <!-- Image -->
             <div class="bg-white shadow-sm border border-gray-200 p-6">
-                <h2 class="text-lg font-light text-gray-900 tracking-wide mb-6">Image principale</h2>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-light text-gray-900 tracking-wide">Image principale</h2>
+                    <button type="button" id="analyze-image-btn"
+                            class="hidden px-4 py-2 bg-blue-600 text-white text-xs font-light tracking-wide hover:bg-blue-700 transition-colors duration-200 rounded">
+                        <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Analyser avec IA
+                    </button>
+                </div>
 
                 <div>
                     <label for="image" class="block text-sm font-light text-gray-700 tracking-wide mb-2">IMAGE</label>
@@ -164,6 +173,22 @@
                     @error('image')
                         <p class="mt-1 text-sm text-red-600 font-light">{{ $message }}</p>
                     @enderror
+
+                    <!-- Prévisualisation de l'image -->
+                    <div id="image-preview" class="mt-4 hidden">
+                        <img src="" alt="Prévisualisation" class="w-full h-48 object-cover rounded border border-gray-200">
+                    </div>
+
+                    <!-- Message de chargement -->
+                    <div id="analyzing-message" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                        <div class="flex items-center">
+                            <svg class="animate-spin h-5 w-5 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-sm text-blue-700 font-light">Analyse de l'image en cours...</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -250,4 +275,146 @@
         </div>
     </div>
 </form>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('image');
+    const analyzeBtn = document.getElementById('analyze-image-btn');
+    const imagePreview = document.getElementById('image-preview');
+    const analyzingMessage = document.getElementById('analyzing-message');
+
+    // Afficher le bouton d'analyse et la prévisualisation quand une image est sélectionnée
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Afficher la prévisualisation
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.querySelector('img').src = e.target.result;
+                imagePreview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+
+            // Afficher le bouton d'analyse
+            analyzeBtn.classList.remove('hidden');
+        } else {
+            imagePreview.classList.add('hidden');
+            analyzeBtn.classList.add('hidden');
+        }
+    });
+
+    // Gérer le clic sur le bouton d'analyse
+    analyzeBtn.addEventListener('click', async function() {
+        const file = imageInput.files[0];
+        if (!file) {
+            alert('Veuillez d\'abord sélectionner une image');
+            return;
+        }
+
+        // Afficher le message de chargement
+        analyzingMessage.classList.remove('hidden');
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<svg class="inline-block animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Analyse en cours...';
+
+        // Créer le FormData
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        try {
+            const response = await fetch('{{ route('admin.artworks.analyze-image') }}', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            console.log('Réponse complète:', result);
+
+            if (result.success && result.data) {
+                // Remplir les champs avec les données analysées
+                const data = result.data;
+                console.log('Données reçues:', data);
+
+                // Remplir le titre
+                if (data.title_fr && data.title_fr.trim() !== '') {
+                    console.log('Remplissage titre:', data.title_fr);
+                    document.getElementById('title').value = data.title_fr;
+                }
+
+                // Remplir l'artiste
+                if (data.artist && data.artist.trim() !== '') {
+                    console.log('Remplissage artiste:', data.artist);
+                    document.getElementById('artist').value = data.artist;
+                }
+
+                // Remplir l'année
+                if (data.year && data.year.toString().trim() !== '') {
+                    console.log('Remplissage année:', data.year);
+                    document.getElementById('creation_year').value = data.year;
+                }
+
+                // Remplir les descriptions
+                if (data.description_fr && data.description_fr.trim() !== '') {
+                    console.log('Remplissage description FR');
+                    document.getElementById('description_fr').value = data.description_fr;
+                }
+
+                if (data.description_en && data.description_en.trim() !== '') {
+                    console.log('Remplissage description EN');
+                    document.getElementById('description_en').value = data.description_en;
+                }
+
+                if (data.description_wo && data.description_wo.trim() !== '') {
+                    console.log('Remplissage description WO');
+                    document.getElementById('description_wo').value = data.description_wo;
+                }
+
+                // Remplir le contexte culturel
+                if (data.cultural_context && data.cultural_context.trim() !== '') {
+                    console.log('Remplissage contexte culturel');
+                    document.getElementById('cultural_significance').value = data.cultural_context;
+                }
+
+                // Afficher un message de succès
+                showNotification('Analyse réussie ! Les champs ont été remplis automatiquement.', 'success');
+            } else {
+                console.error('Erreur dans la réponse:', result);
+                showNotification('Erreur lors de l\'analyse: ' + (result.message || 'Erreur inconnue'), 'error');
+            }
+        } catch (error) {
+            console.error('Erreur complète:', error);
+            showNotification('Erreur lors de l\'analyse de l\'image: ' + error.message, 'error');
+        } finally {
+            // Cacher le message de chargement
+            analyzingMessage.classList.add('hidden');
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '<svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Analyser avec IA';
+        }
+    });
+
+    // Fonction pour afficher les notifications
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 p-4 rounded shadow-lg ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white max-w-md`;
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <span class="font-light">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(notification);
+
+        // Supprimer automatiquement après 5 secondes
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+});
+</script>
+@endpush
 @endsection

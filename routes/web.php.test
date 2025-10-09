@@ -1,0 +1,22 @@
+<?php
+// Route de test temporaire - À SUPPRIMER après débogage
+Route::get('/test-openai', function () {
+    try {
+        $response = OpenAI::chat()->create([
+            'model' => 'gpt-4o',
+            'messages' => [
+                ['role' => 'user', 'content' => 'Dis bonjour en JSON avec la clé "message"'],
+            ],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'response' => $response->choices[0]->message->content,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+        ]);
+    }
+});
